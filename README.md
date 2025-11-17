@@ -176,6 +176,24 @@ This app was created with the help of AI as assistance.
 ## Thank you!  
 A special thank you to https://ezgif.com/ for the GIF made converting my MP4. Thank you!  
 
+## About Me & Contact
+
+**Thiago Maria**  
+
+My passion for programming and my professional background in security analysis led me to create this GitHub account to share my knowledge of security information, cybersecurity, Python, and AI development practices. My work primarily focuses on prioritizing security in organizations while ensuring usability and productivity.
+
+Let's Connect:  
+
+👇🏽 Click on the badges below:  
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/thiago-cequeira-99202239/)  
+[![Hugging Face](https://img.shields.io/badge/🤗Hugging_Face-AI_projects-yellow)](https://huggingface.co/ThiSecur)  
+ 
+## Ways to Contribute:   
+ Want to see more upgrades? Help me keep it updated!   
+ 👇🏽 Click   
+ [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-red)](https://github.com/sponsors/ThiagoMaria-SecurityIT) 
+
 ---
 
 **Happy PDF organizing!** 📚✨
