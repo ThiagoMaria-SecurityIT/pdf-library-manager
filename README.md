@@ -47,6 +47,10 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+or  
+```bash
+pip install PyQt5 PyMuPDF Pillow
+```
 
 ### Step 4: Run the Application
 ```bash
