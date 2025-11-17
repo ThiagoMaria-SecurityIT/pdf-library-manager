@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.6%2B-3776AB?logo=python&logoColor=white)
 ![PyQt5](https://img.shields.io/badge/PyQt5-5.15%2B-41CD52?logo=qt&logoColor=white)
 
-A powerful Python desktop application that creates a visual library of your PDF files with customizable thumbnails. Built with PyQt5 for a modern, professional interface that solves the common problem of PDF thumbnail generation on Windows 11 and Linux systems.
+A Python desktop application that creates a visual library of your PDF files with customizable thumbnails. Built with PyQt5 for a modern, professional interface that solves the common problem of PDF thumbnail generation on Windows 11 and Linux systems.
 
 Image 1: App with PDF Thumbnail preview — `PDFs not included with this app`.
 <img width="1438" height="870" alt="image" src="https://github.com/user-attachments/assets/1a486611-c30a-461d-b570-e67cb2d43405" />  
