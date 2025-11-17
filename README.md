@@ -29,6 +29,8 @@ __PDFs not included with this app__
 - **Smart Caching**: Automatic thumbnail caching for quick loading
 - **Cross-Platform**: Works on both Windows 11 and Linux distributions
 
+![test](appdemo.gif)
+
 ## 🆚 What's New in This Version
 
 - **Upgraded GUI**: Replaced Tkinter with PyQt5 for a more professional appearance
@@ -71,7 +73,7 @@ pip install PyQt5 PyMuPDF Pillow
 
 ### Step 4: Run the Application
 ```bash
-python pyqt_pdf_library.py
+python main.py
 ```
 
 ## 🛠️ Technical Challenges Overcome
@@ -100,7 +102,8 @@ python pyqt_pdf_library.py
 
 ```
 pdf-library-manager/
-├── pyqt_pdf_library.py     # Main application file (PyQt5 version)
+├── main.py     # Main application file (PyQt5 version)
+├── appdemo.gif   # GIF made on the site https://ezgif.com/
 ├── requirements.txt        # Python dependencies
 ├── thumbnail_cache/        # Auto-generated thumbnail cache
 └── README.md              # This file
@@ -166,6 +169,12 @@ If you're interested in learning more about the technologies used in this projec
 - [PyMuPDF Documentation](https://pymupdf.readthedocs.io/en/latest/)
 - [Pillow Handbook](https://pillow.readthedocs.io/en/stable/handbook/index.html)
 - [Python Threading Documentation](https://docs.python.org/3/library/threading.html)
+
+## AI Transparency
+This app was created with the help of AI as assistance.  
+
+## Thank you!  
+A special thank you to https://ezgif.com/ for the GIF made converting my MP4. Thank you!  
 
 ---
 
