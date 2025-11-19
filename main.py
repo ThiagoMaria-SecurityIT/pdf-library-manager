@@ -3,6 +3,7 @@ import os
 import hashlib
 import io
 import threading
+from PyQt5.QtGui import QIcon
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -355,6 +356,7 @@ class PDFLibraryWidget(QWidget):
         self.cache_dir.mkdir(exist_ok=True)
         self.thumbnail_size = (100, 140)
         self.thumbnail_worker = None
+        self.selected_pdf = None  # Track selected PDF
         self.init_ui()
     
     def init_ui(self):
@@ -513,7 +515,35 @@ class PDFLibraryWidget(QWidget):
     
     def on_thumbnail_clicked(self, pdf_path):
         """Handle thumbnail click"""
+        self.selected_pdf = pdf_path
         self.pdf_selected.emit(pdf_path)
+        
+        # Update the visual selection state
+        for path, widget in self.thumbnail_widgets.items():
+            if path == pdf_path:
+                widget.setStyleSheet("""
+                    QLabel {
+                        border: 2px solid #4a90e2;
+                        border-radius: 4px;
+                        padding: 5px;
+                        background-color: white;
+                    }
+                    QLabel:hover {
+                        border: 2px solid #4a90e2;
+                    }
+                """)
+            else:
+                widget.setStyleSheet("""
+                    QLabel {
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        padding: 5px;
+                        background-color: white;
+                    }
+                    QLabel:hover {
+                        border: 2px solid #4a90e2;
+                    }
+                """)
     
     def on_search(self, text):
         """Handle search functionality"""
@@ -533,9 +563,135 @@ class PDFLibraryWidget(QWidget):
     
     def apply_thumbnail_to_selected(self):
         """Apply thumbnail page setting only to the selected PDF"""
-        # This would need to track which PDF is selected
-        # For simplicity, we'll just apply to all
-        self.apply_thumbnail_settings()
+        if not self.selected_pdf:
+            QMessageBox.warning(self, "No PDF selected", "Please select a PDF first")
+            return
+            
+        try:
+            new_page = int(self.thumbnail_page_spin.value())
+            pdf_filename = os.path.basename(self.selected_pdf)
+            
+            # Clear cache only for the selected PDF
+            cache_files_cleared = self.clear_cache_for_pdf(self.selected_pdf)
+            
+            # Update only the selected thumbnail
+            success = self.update_single_thumbnail(self.selected_pdf, new_page)
+            
+            if success:
+                QMessageBox.information(self, "Success", 
+                                      f"Thumbnail updated for: {pdf_filename}\n"
+                                      f"Now using page {new_page}\n"
+                                      f"Cleared {cache_files_cleared} cache files")
+            else:
+                QMessageBox.critical(self, "Error", f"Could not update thumbnail for {pdf_filename}")
+                
+        except ValueError:
+            QMessageBox.critical(self, "Error", "Please enter a valid page number")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Could not update thumbnail: {e}")
+    
+    def update_single_thumbnail(self, pdf_path, page_num=None):
+        """Update thumbnail for a single PDF without refreshing entire library"""
+        if page_num is None:
+            page_num = int(self.thumbnail_page_spin.value())
+        
+        pdf_filename = os.path.basename(pdf_path)
+        
+        # Find the thumbnail widget for this PDF
+        thumbnail_widget = None
+        if pdf_path in self.thumbnail_widgets:
+            thumbnail_widget = self.thumbnail_widgets[pdf_path]
+        
+        if thumbnail_widget is None:
+            return False
+            
+        try:
+            # Generate new thumbnail
+            thumbnail_img = self.generate_thumbnail(pdf_path, page_num)
+            
+            # Update widget with new thumbnail
+            thumbnail_widget.set_thumbnail(thumbnail_img)
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error updating thumbnail for {pdf_filename}: {e}")
+            return False
+    
+    def generate_thumbnail(self, pdf_path, page_num=0):
+        """Generate thumbnail from PDF page"""
+        cache_file = self.get_cache_filename(pdf_path, page_num)
+        
+        if cache_file.exists():
+            try:
+                return Image.open(cache_file)
+            except Exception:
+                # Corrupted cache file, regenerate
+                pass
+        
+        doc = None
+        try:
+            doc = fitz.open(pdf_path)
+            if page_num >= len(doc):
+                page_num = min(len(doc) - 1, 0)  # Use last page if requested page doesn't exist
+            
+            page = doc[page_num]
+            pix = page.get_pixmap(matrix=fitz.Matrix(2.0, 2.0))
+            
+            img_data = pix.tobytes("ppm")
+            img = Image.open(io.BytesIO(img_data))
+            img.thumbnail(self.thumbnail_size, Image.Resampling.LANCZOS)
+            
+            # Save with optimization
+            img.save(cache_file, "PNG", optimize=True)
+            return img
+            
+        except Exception as e:
+            print(f"Error generating thumbnail for {pdf_path}: {e}")
+            return self.create_placeholder_thumbnail()
+        finally:
+            if doc:
+                doc.close()
+    
+    def get_cache_filename(self, pdf_path, page_num=0):
+        """Generate a unique cache filename for a PDF thumbnail"""
+        try:
+            file_stat = os.stat(pdf_path)
+            cache_key = f"{pdf_path}_{file_stat.st_mtime}_{page_num}"
+            hash_name = hashlib.md5(cache_key.encode()).hexdigest()[:12]
+            
+            pdf_filename = Path(pdf_path).stem
+            safe_filename = "".join(c for c in pdf_filename if c.isalnum() or c in ('-', '_')).rstrip()
+            cache_filename = f"{safe_filename}_{hash_name}_p{page_num}.png"
+            
+            return self.cache_dir / cache_filename
+        except Exception:
+            # Fallback if file stats can't be read
+            pdf_filename = Path(pdf_path).name
+            safe_filename = "".join(c for c in pdf_filename if c.isalnum() or c in ('-', '_')).rstrip()
+            cache_filename = f"{safe_filename}_p{page_num}.png"
+            return self.cache_dir / cache_filename
+    
+    def create_placeholder_thumbnail(self):
+        """Create a placeholder thumbnail when PDF can't be processed"""
+        return Image.new('RGB', self.thumbnail_size, color='lightgray')
+    
+    def clear_cache_for_pdf(self, pdf_path):
+        """Clear cache for a specific PDF file"""
+        try:
+            pdf_filename = os.path.basename(pdf_path)
+            safe_filename = "".join(c for c in pdf_filename if c.isalnum() or c in ('-', '_')).rstrip()
+            
+            cache_files_cleared = 0
+            for cache_file in self.cache_dir.glob("*.png"):
+                if cache_file.name.startswith(safe_filename + "_"):
+                    cache_file.unlink()
+                    cache_files_cleared += 1
+                    
+            return cache_files_cleared
+        except Exception as e:
+            print(f"Error clearing cache for {pdf_path}: {e}")
+            return 0
     
     def apply_thumbnail_settings(self):
         """Apply thumbnail page settings to all PDFs"""
@@ -580,6 +736,7 @@ class PDFLibraryMainWindow(QMainWindow):
         """Initialize the main window UI"""
         self.setWindowTitle("PDF Library Viewer")
         self.setGeometry(100, 100, 1400, 800)
+        self.setWindowIcon(QIcon("library2.ico"))
         
         # Create central widget with splitter
         central_widget = QWidget()
