@@ -48,7 +48,7 @@ __PDFs not included with this app__
 - Persistent Settings: Theme preference saved to JSON file
 - Visual Feedback: Selected PDFs highlighted in both themes
 
-Image: New Dark Theme with CDSE Posters from: [CDSE Security Posters](https://www.cdse.edu/Training/Security-Posters)    
+Image: New dark theme with CDSE Posters from: [CDSE Security Posters](https://www.cdse.edu/Training/Security-Posters)    
 <img width="1919" height="1005" alt="image" src="https://github.com/user-attachments/assets/2841ca4d-f26b-4ab5-8976-4b3f494910bd" />  
 Obs.: This app does not come with the posters, but you can have them freely at the [CDSE Security Posters](https://www.cdse.edu/Training/Security-Posters)  . 
 
