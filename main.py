@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import hashlib
 import io
 import threading
@@ -14,7 +15,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                             QStatusBar, QDockWidget, QSlider,
                             QComboBox, QTabWidget, QTreeWidget, QTreeWidgetItem,
                             QSplitter, QMenuBar, QAction)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QTimer, QDir, QBuffer, QIODevice
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QTimer, QDir, QBuffer, QIODevice, QObject  # Added QObject import
 from PyQt5.QtGui import QPixmap, QIcon, QFont, QPalette, QColor
 
 try:
@@ -23,6 +24,332 @@ try:
 except ImportError:
     print("Required packages not installed. Please install PyMuPDF and Pillow.")
     sys.exit(1)
+
+class ThemeManager(QObject):  # Now QObject is properly imported
+    """Manages application themes and settings"""
+    theme_changed = pyqtSignal(str)
+    
+    def __init__(self):
+        super().__init__()
+        self.settings_file = "theme_settings.json"
+        self.current_theme = "light"
+        self.load_settings()
+    
+    def load_settings(self):
+        """Load theme settings from file"""
+        try:
+            if os.path.exists(self.settings_file):
+                with open(self.settings_file, 'r') as f:
+                    settings = json.load(f)
+                    self.current_theme = settings.get('theme', 'light')
+        except Exception as e:
+            print(f"Error loading theme settings: {e}")
+            self.current_theme = "light"
+    
+    def save_settings(self):
+        """Save theme settings to file"""
+        try:
+            settings = {'theme': self.current_theme}
+            with open(self.settings_file, 'w') as f:
+                json.dump(settings, f)
+        except Exception as e:
+            print(f"Error saving theme settings: {e}")
+    
+    def set_theme(self, theme_name):
+        """Set current theme"""
+        if theme_name in ['light', 'dark']:
+            self.current_theme = theme_name
+            self.save_settings()
+            self.theme_changed.emit(theme_name)
+    
+    def toggle_theme(self):
+        """Toggle between light and dark themes"""
+        new_theme = 'dark' if self.current_theme == 'light' else 'light'
+        self.set_theme(new_theme)
+        return new_theme
+    
+    def get_current_theme(self):
+        """Get current theme name"""
+        return self.current_theme
+
+class ThemeStyles:
+    """Theme styles and color palettes"""
+    
+    LIGHT_THEME = {
+        'main_bg': '#ffffff',
+        'secondary_bg': '#f8f9fa',
+        'accent': '#0078d4',
+        'accent_hover': '#106ebe',
+        'text_primary': '#323130',
+        'text_secondary': '#605e5c',
+        'border': '#e1dfdd',
+        'border_hover': '#c8c6c4',
+        'success': '#107c10',
+        'warning': '#ff8c00',
+        'error': '#d13438',
+        'thumbnail_bg': '#ffffff',
+        'thumbnail_border': '#e1dfdd',
+        'thumbnail_selected': '#0078d4',
+        'scrollbar_bg': '#f3f2f1',
+        'scrollbar_handle': '#c8c6c4',
+        'button_bg': '#ffffff',
+        'button_hover': '#f3f2f1',
+        'input_bg': '#ffffff',
+        'input_border': '#e1dfdd',
+        'toolbar_bg': '#faf9f8',
+        'menu_bg': '#ffffff',
+        'status_bg': '#f3f2f1'
+    }
+    
+    DARK_THEME = {
+        'main_bg': '#1e1e1e',
+        'secondary_bg': '#252526',
+        'accent': '#0078d4',
+        'accent_hover': '#1b6fb5',
+        'text_primary': '#cccccc',
+        'text_secondary': '#969696',
+        'border': '#3e3e42',
+        'border_hover': '#5a5a5a',
+        'success': '#13a10e',
+        'warning': '#ff8c00',
+        'error': '#f1707d',
+        'thumbnail_bg': '#2d2d30',
+        'thumbnail_border': '#3e3e42',
+        'thumbnail_selected': '#0078d4',
+        'scrollbar_bg': '#1e1e1e',
+        'scrollbar_handle': '#686868',
+        'button_bg': '#323232',
+        'button_hover': '#404040',
+        'input_bg': '#323232',
+        'input_border': '#3e3e42',
+        'toolbar_bg': '#2d2d30',
+        'menu_bg': '#252526',
+        'status_bg': '#0078d4'
+    }
+    
+    @staticmethod
+    def get_stylesheet(theme_name):
+        """Get complete stylesheet for a theme"""
+        colors = ThemeStyles.LIGHT_THEME if theme_name == 'light' else ThemeStyles.DARK_THEME
+        
+        return f"""
+        /* Main Application */
+        QMainWindow {{
+            background-color: {colors['main_bg']};
+            color: {colors['text_primary']};
+        }}
+        
+        QWidget {{
+            background-color: {colors['main_bg']};
+            color: {colors['text_primary']};
+        }}
+        
+        /* Frames and Containers */
+        QFrame {{
+            background-color: {colors['secondary_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+        }}
+        
+        /* Buttons */
+        QPushButton {{
+            background-color: {colors['button_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+            padding: 6px 12px;
+            color: {colors['text_primary']};
+        }}
+        
+        QPushButton:hover {{
+            background-color: {colors['button_hover']};
+            border-color: {colors['border_hover']};
+        }}
+        
+        QPushButton:pressed {{
+            background-color: {colors['accent']};
+            color: white;
+        }}
+        
+        /* Tool Buttons */
+        QToolButton {{
+            background-color: {colors['toolbar_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+            padding: 4px;
+            color: {colors['text_primary']};
+        }}
+        
+        QToolButton:hover {{
+            background-color: {colors['button_hover']};
+            border-color: {colors['border_hover']};
+        }}
+        
+        /* Toolbar */
+        QToolBar {{
+            background-color: {colors['toolbar_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+            spacing: 3px;
+        }}
+        
+        QToolBar::handle {{
+            background-color: {colors['border']};
+            width: 8px;
+            border-radius: 4px;
+        }}
+        
+        /* Menu Bar */
+        QMenuBar {{
+            background-color: {colors['menu_bg']};
+            border-bottom: 1px solid {colors['border']};
+            color: {colors['text_primary']};
+        }}
+        
+        QMenuBar::item {{
+            padding: 4px 8px;
+            background-color: transparent;
+        }}
+        
+        QMenuBar::item:selected {{
+            background-color: {colors['accent']};
+            color: white;
+        }}
+        
+        QMenu {{
+            background-color: {colors['menu_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+            color: {colors['text_primary']};
+        }}
+        
+        QMenu::item {{
+            padding: 6px 20px;
+        }}
+        
+        QMenu::item:selected {{
+            background-color: {colors['accent']};
+            color: white;
+        }}
+        
+        /* Input Fields */
+        QLineEdit, QSpinBox {{
+            background-color: {colors['input_bg']};
+            border: 1px solid {colors['input_border']};
+            border-radius: 4px;
+            padding: 6px;
+            color: {colors['text_primary']};
+        }}
+        
+        QLineEdit:focus, QSpinBox:focus {{
+            border-color: {colors['accent']};
+        }}
+        
+        /* Labels */
+        QLabel {{
+            color: {colors['text_primary']};
+            background-color: transparent;
+        }}
+        
+        /* Scroll Area */
+        QScrollArea {{
+            background-color: {colors['main_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+        }}
+        
+        QScrollBar:vertical {{
+            background-color: {colors['scrollbar_bg']};
+            width: 12px;
+            border-radius: 6px;
+        }}
+        
+        QScrollBar::handle:vertical {{
+            background-color: {colors['scrollbar_handle']};
+            border-radius: 6px;
+            min-height: 20px;
+        }}
+        
+        QScrollBar::handle:vertical:hover {{
+            background-color: {colors['border_hover']};
+        }}
+        
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+            height: 0px;
+        }}
+        
+        QScrollBar:horizontal {{
+            background-color: {colors['scrollbar_bg']};
+            height: 12px;
+            border-radius: 6px;
+        }}
+        
+        QScrollBar::handle:horizontal {{
+            background-color: {colors['scrollbar_handle']};
+            border-radius: 6px;
+            min-width: 20px;
+        }}
+        
+        QScrollBar::handle:horizontal:hover {{
+            background-color: {colors['border_hover']};
+        }}
+        
+        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+            width: 0px;
+        }}
+        
+        /* Progress Bar */
+        QProgressBar {{
+            background-color: {colors['secondary_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+            text-align: center;
+            color: {colors['text_primary']};
+        }}
+        
+        QProgressBar::chunk {{
+            background-color: {colors['accent']};
+            border-radius: 3px;
+        }}
+        
+        /* Status Bar */
+        QStatusBar {{
+            background-color: {colors['status_bg']};
+            color: {colors['text_primary']};
+            border-top: 1px solid {colors['border']};
+        }}
+        
+        /* Splitter */
+        QSplitter::handle {{
+            background-color: {colors['border']};
+        }}
+        
+        QSplitter::handle:horizontal {{
+            width: 2px;
+        }}
+        
+        QSplitter::handle:vertical {{
+            height: 2px;
+        }}
+        
+        /* Thumbnail Widget Specific */
+        ThumbnailWidget {{
+            background-color: {colors['thumbnail_bg']};
+            border: 1px solid {colors['thumbnail_border']};
+            border-radius: 4px;
+            padding: 5px;
+        }}
+        
+        ThumbnailWidget:hover {{
+            border: 2px solid {colors['accent_hover']};
+        }}
+        
+        /* PDF Viewer */
+        PDFViewer QLabel {{
+            background-color: {colors['secondary_bg']};
+            border: 1px solid {colors['border']};
+            border-radius: 4px;
+        }}
+        """
 
 class ThumbnailWorker(QThread):
     """Worker thread for generating thumbnails"""
@@ -121,6 +448,7 @@ class PDFViewer(QWidget):
         self.total_pages = 0
         self.viewer_zoom = 1.0
         self.selected_pdf = None
+        self.theme_manager = None  # Will be set by parent
         self.init_ui()
     
     def init_ui(self):
@@ -175,6 +503,10 @@ class PDFViewer(QWidget):
         
         self.setLayout(layout)
     
+    def set_theme_manager(self, theme_manager):
+        """Set theme manager reference"""
+        self.theme_manager = theme_manager
+    
     def display_pdf(self, pdf_path):
         """Display PDF in the viewer"""
         try:
@@ -214,8 +546,31 @@ class PDFViewer(QWidget):
             self.image_label.resize(q_image.size())
             self.update_page_info()
             
+            # Apply theme-specific background
+            if self.theme_manager:
+                self.apply_theme_background()
+            
         except Exception as e:
             print(f"Error rendering PDF page: {e}")
+    
+    def apply_theme_background(self):
+        """Apply theme-specific background to image label"""
+        if self.theme_manager.get_current_theme() == 'dark':
+            self.image_label.setStyleSheet("""
+                QLabel {
+                    background-color: #2d2d30;
+                    border: 1px solid #3e3e42;
+                    border-radius: 4px;
+                }
+            """)
+        else:
+            self.image_label.setStyleSheet("""
+                QLabel {
+                    background-color: #f0f0f0;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                }
+            """)
     
     def update_page_info(self):
         """Update the page navigation info"""
@@ -289,23 +644,14 @@ class ThumbnailWidget(QLabel):
         super().__init__()
         self.pdf_path = pdf_path
         self.thumbnail = thumbnail
+        self.is_selected = False
         self.init_ui()
     
     def init_ui(self):
         """Initialize the thumbnail widget"""
         self.setFixedSize(120, 160)
         self.setAlignment(Qt.AlignCenter)
-        self.setStyleSheet("""
-            QLabel {
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                padding: 5px;
-                background-color: white;
-            }
-            QLabel:hover {
-                border: 2px solid #4a90e2;
-            }
-        """)
+        self.update_style()
         
         if self.thumbnail:
             self.set_thumbnail(self.thumbnail)
@@ -314,6 +660,38 @@ class ThumbnailWidget(QLabel):
         
         # Mouse events
         self.mousePressEvent = self.on_click
+    
+    def update_style(self):
+        """Update widget style based on selection state"""
+        if self.is_selected:
+            self.setStyleSheet("""
+                QLabel {
+                    border: 2px solid #0078d4;
+                    border-radius: 4px;
+                    padding: 5px;
+                    background-color: white;
+                }
+                QLabel:hover {
+                    border: 2px solid #0078d4;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                QLabel {
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                    padding: 5px;
+                    background-color: white;
+                }
+                QLabel:hover {
+                    border: 2px solid #4a90e2;
+                }
+            """)
+    
+    def set_selected(self, selected):
+        """Set selection state"""
+        self.is_selected = selected
+        self.update_style()
     
     def set_thumbnail(self, thumbnail):
         """Set the thumbnail image"""
@@ -357,7 +735,12 @@ class PDFLibraryWidget(QWidget):
         self.thumbnail_size = (100, 140)
         self.thumbnail_worker = None
         self.selected_pdf = None  # Track selected PDF
+        self.theme_manager = None  # Will be set by parent
         self.init_ui()
+    
+    def set_theme_manager(self, theme_manager):
+        """Set theme manager reference"""
+        self.theme_manager = theme_manager
     
     def init_ui(self):
         """Initialize the PDF library UI"""
@@ -520,30 +903,7 @@ class PDFLibraryWidget(QWidget):
         
         # Update the visual selection state
         for path, widget in self.thumbnail_widgets.items():
-            if path == pdf_path:
-                widget.setStyleSheet("""
-                    QLabel {
-                        border: 2px solid #4a90e2;
-                        border-radius: 4px;
-                        padding: 5px;
-                        background-color: white;
-                    }
-                    QLabel:hover {
-                        border: 2px solid #4a90e2;
-                    }
-                """)
-            else:
-                widget.setStyleSheet("""
-                    QLabel {
-                        border: 1px solid #ccc;
-                        border-radius: 4px;
-                        padding: 5px;
-                        background-color: white;
-                    }
-                    QLabel:hover {
-                        border: 2px solid #4a90e2;
-                    }
-                """)
+            widget.set_selected(path == pdf_path)
     
     def on_search(self, text):
         """Handle search functionality"""
@@ -730,11 +1090,16 @@ class PDFLibraryMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.selected_pdf = None
+        self.theme_manager = ThemeManager()
         self.init_ui()
+        self.apply_theme()
+        
+        # Connect theme change signal
+        self.theme_manager.theme_changed.connect(self.apply_theme)
     
     def init_ui(self):
         """Initialize the main window UI"""
-        self.setWindowTitle("PDF Library Viewer")
+        self.setWindowTitle("PDF Library Manager")
         self.setGeometry(100, 100, 1400, 800)
         self.setWindowIcon(QIcon("library2.ico"))
         
@@ -759,6 +1124,10 @@ class PDFLibraryMainWindow(QMainWindow):
         splitter.setSizes([350, 1050])
         
         layout.addWidget(splitter)
+        
+        # Set theme manager references
+        self.pdf_library.set_theme_manager(self.theme_manager)
+        self.pdf_viewer.set_theme_manager(self.theme_manager)
         
         # Create status bar
         self.status_bar = QStatusBar()
@@ -788,6 +1157,26 @@ class PDFLibraryMainWindow(QMainWindow):
         exit_action = file_menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
         
+        # View menu
+        view_menu = menubar.addMenu("View")
+        
+        # Theme submenu
+        theme_menu = view_menu.addMenu("Theme")
+        
+        light_theme_action = theme_menu.addAction("Light Theme")
+        light_theme_action.setCheckable(True)
+        light_theme_action.triggered.connect(lambda: self.theme_manager.set_theme('light'))
+        
+        dark_theme_action = theme_menu.addAction("Dark Theme")
+        dark_theme_action.setCheckable(True)
+        dark_theme_action.triggered.connect(lambda: self.theme_manager.set_theme('dark'))
+        
+        # Update checked state based on current theme
+        if self.theme_manager.get_current_theme() == 'light':
+            light_theme_action.setChecked(True)
+        else:
+            dark_theme_action.setChecked(True)
+        
         # Tools menu
         tools_menu = menubar.addMenu("Tools")
         
@@ -804,11 +1193,65 @@ class PDFLibraryMainWindow(QMainWindow):
         """Create the toolbar"""
         toolbar = self.addToolBar("Main")
         
-        open_folder_action = toolbar.addAction("Open Folder")
+        open_folder_action = toolbar.addAction("📁 Open Folder")
         open_folder_action.triggered.connect(self.pdf_library.open_folder)
         
-        refresh_action = toolbar.addAction("Refresh")
+        refresh_action = toolbar.addAction("🔄 Refresh")
         refresh_action.triggered.connect(self.pdf_library.refresh_library)
+        
+        toolbar.addSeparator()
+        
+        # Theme toggle button
+        theme_toggle_action = toolbar.addAction("🌙 Dark Mode")
+        theme_toggle_action.triggered.connect(self.toggle_theme)
+        self.theme_toggle_action = theme_toggle_action
+    
+    def toggle_theme(self):
+        """Toggle between light and dark themes"""
+        new_theme = self.theme_manager.toggle_theme()
+        
+        # Update button text
+        if new_theme == 'dark':
+            self.theme_toggle_action.setText("☀️ Light Mode")
+        else:
+            self.theme_toggle_action.setText("🌙 Dark Mode")
+        
+        # Update menu items
+        self.update_theme_menu()
+    
+    def update_theme_menu(self):
+        """Update theme menu check states"""
+        menubar = self.menuBar()
+        for action in menubar.actions():
+            if action.text() == "View":
+                view_menu = action.menu()
+                for sub_action in view_menu.actions():
+                    if sub_action.text() == "Theme":
+                        theme_menu = sub_action.menu()
+                        for theme_action in theme_menu.actions():
+                            if theme_action.text() == "Light Theme":
+                                theme_action.setChecked(self.theme_manager.get_current_theme() == 'light')
+                            elif theme_action.text() == "Dark Theme":
+                                theme_action.setChecked(self.theme_manager.get_current_theme() == 'dark')
+    
+    def apply_theme(self):
+        """Apply current theme to the application"""
+        theme_name = self.theme_manager.get_current_theme()
+        stylesheet = ThemeStyles.get_stylesheet(theme_name)
+        self.setStyleSheet(stylesheet)
+        
+        # Update theme toggle button
+        if theme_name == 'dark':
+            self.theme_toggle_action.setText("☀️ Light Mode")
+        else:
+            self.theme_toggle_action.setText("🌙 Dark Mode")
+        
+        # Update menu items
+        self.update_theme_menu()
+        
+        # Apply theme to PDF viewer
+        if hasattr(self.pdf_viewer, 'apply_theme_background'):
+            self.pdf_viewer.apply_theme_background()
     
     def on_pdf_selected(self, pdf_path):
         """Handle PDF selection"""
@@ -821,14 +1264,15 @@ class PDFLibraryMainWindow(QMainWindow):
     
     def show_about(self):
         """Show about dialog"""
-        QMessageBox.about(self, "About PDF Library Viewer", 
-                         "PDF Library Viewer\n\nA modern PDF viewer with thumbnail previews\n\n"
+        QMessageBox.about(self, "About PDF Library Manager", 
+                         "PDF Library Manager\n\nA modern PDF viewer with thumbnail previews\n\n"
                          "Features:\n"
                          "- Thumbnail previews\n"
                          "- PDF viewing with navigation\n"
                          "- Zoom controls\n"
                          "- Search functionality\n"
-                         "- Thumbnail caching")
+                         "- Thumbnail caching\n"
+                         "- Dark/Light theme support")
 
 def main():
     app = QApplication(sys.argv)
