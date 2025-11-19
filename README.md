@@ -115,11 +115,15 @@ python main.py
 
 ```
 pdf-library-manager/
-├── main.py     # Main application file (PyQt5 version)
-├── appdemo.gif   # GIF made on the site https://ezgif.com/
-├── requirements.txt        # Python dependencies
-├── thumbnail_cache/        # Auto-generated thumbnail cache
-└── README.md              # This file
+├── .gitignore            # files and directories to ignore 
+├── LICENSE               # License for this project
+├── main.py               # Main application file (PyQt5 version)
+├── library2.ico          # Icon for the app main window
+├── appdemo.gif           # GIF made on the site https://ezgif.com/
+├── requirements.txt      # Python dependencies
+├── thumbnail_cache/      # Auto-generated thumbnail cache folder
+└── README.md             # This file
+
 ```
 
 ## 🎮 How to Use
