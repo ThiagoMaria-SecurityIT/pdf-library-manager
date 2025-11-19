@@ -40,6 +40,19 @@ __PDFs not included with this app__
 - **Improved Search**: More responsive search functionality
 - **Better Error Handling**: More informative error messages and graceful failure handling
 
+### The dark theme implementation is fully functional with:
+
+- Theme Manager: Handles theme switching and persistence
+- Complete Styling: All widgets styled for both light and dark modes
+- Toggle Functionality: Toolbar button and menu options for theme switching
+- Persistent Settings: Theme preference saved to JSON file
+- Visual Feedback: Selected PDFs highlighted in both themes
+
+Image: New Dark Theme with CDSE Posters from: [CDSE Security Posters](https://www.cdse.edu/Training/Security-Posters)    
+<img width="1919" height="1005" alt="image" src="https://github.com/user-attachments/assets/2841ca4d-f26b-4ab5-8976-4b3f494910bd" />  
+Obs.: This app does not come with the posters, but you can have them freely at the [CDSE Security Posters](https://www.cdse.edu/Training/Security-Posters)  . 
+
+
 ## 🚀 Quick Start Guide
 
 ### Step 1: Download and Extract
@@ -161,6 +174,17 @@ This project demonstrates:
 
 **Need Help?** Check that all requirements are installed and your PDF files are accessible.
 
+## What's Coming Next 
+Expected time to finish 2026 Q2
+
+- Library Collections - Organize your PDFs
+- Reading Progress - Track your reading
+- Smart Search - Find anything fast
+- Cloud Sync - Access anywhere 
+- Better Notes - Take notes while reading
+
+Coming 2026
+
 ## 📚 Resources for Learners
 
 If you're interested in learning more about the technologies used in this project:
@@ -174,7 +198,7 @@ If you're interested in learning more about the technologies used in this projec
 This app was created with the help of AI as assistance.  
 
 ## Thank you!  
-A special thank you to https://ezgif.com/ for the GIF made converting my MP4. Thank you!  
+A special thank you to https://ezgif.com/ for the GIF made converting my MP4.     
 
 ## About Me & Contact
 
@@ -188,7 +212,14 @@ Let's Connect:
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/thiago-cequeira-99202239/)  
 [![Hugging Face](https://img.shields.io/badge/🤗Hugging_Face-AI_projects-yellow)](https://huggingface.co/ThiSecur)  
- 
+
+## 🤝 Want to Help?
+Join me to shape the future of this app and/or:
+
+- Vote on feature priorities  
+- Test new features 
+- Share your ideas and feedback  
+
 ## Ways to Contribute:   
  Want to see more upgrades? Help me keep it updated!   
  👇🏽 Click   
