@@ -176,7 +176,49 @@ This project demonstrates:
 - **Slow loading**: First-time thumbnail generation takes longer; subsequent loads use cache
 - **Import errors**: Make sure you have PyQt5, PyMuPDF, and Pillow installed correctly
 
-**Need Help?** Check that all requirements are installed and your PDF files are accessible.
+## Debian and Wayland Troubleshooting
+
+If you enconter errors while running this app with `Wayland`, that is because your Qt application cannot initialize the `xcb` platform plugin, which is essential for GUI rendering under X11. Even though Debian 13 may default to Wayland, many Qt applications still rely on X11/XCB and fail if required libraries are missing.
+
+### Primary Causes & Fixes
+
+1. **Missing `libxcb-cursor0`**  
+   Starting with Qt 6.5, `libxcb-cursor0` is required. Install it:
+   ```bash
+   sudo apt install libxcb-cursor0
+   ```
+
+2. **Other Missing XCB Libraries**  
+   Install common dependencies:
+   ```bash
+   sudo apt install libxcb-xinerama0 libxcb-util1
+   ```
+
+3. **Wayland vs X11 Compatibility**  
+   The warning indicates your session is Wayland, but the app expects X11. Force Qt to use X11:
+   ```bash
+   export QT_QPA_PLATFORM=xcb
+   python3 main.py
+   ```
+   Or allow fallback to XCB if Wayland fails:
+   ```bash
+   export QT_QPA_PLATFORM=wayland;xcb
+   ```
+
+4. **Verify Installation**  
+   Check if plugins are present:
+   ```bash
+   ls /usr/lib/x86_64-linux-gnu/qt5/plugins/platforms/libqxcb.so
+   ```
+   If missing, reinstall Qt platform plugins:
+   ```bash
+   sudo apt install qt5-qmake libqt5gui5
+   ```
+
+**Still Need Help?** Check that all requirements are installed and your PDF files are accessible.
+
+>[!Tip]  
+>To activate a venv in Debian you can use this command: `source venv/bin/activate`  
 
 ## What's Coming Next 
 Expected time to finish 2026 Q2
