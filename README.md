@@ -218,7 +218,25 @@ If you enconter errors while running this app with `Wayland`, that is because yo
 **Still Need Help?** Check that all requirements are installed and your PDF files are accessible.
 
 >[!Tip]  
->To activate a venv in Debian you can use this command: `source venv/bin/activate`  
+>To activate a venv in Debian you can use this command: `source venv/bin/activate` 
+
+## How to make this app an executable
+To use **PyInstaller** to package your Python app on Debian:
+
+1. **Install PyInstaller**:
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. **Create a standalone executable**:
+   ```bash
+   pyinstaller --onefile --windowed main.py
+   ```
+   - `--onefile`: Bundles all into a single executable.
+   - `--windowed`: Hides console (for GUI apps like Qt).
+
+3. **Output**:
+   The executable appears in the `dist/` folder and can run on Debian without Python installed.   
 
 ## What's Coming Next 
 Expected time to finish 2026 Q2
